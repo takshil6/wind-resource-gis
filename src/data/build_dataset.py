@@ -29,6 +29,27 @@ def build_grid_dataset() -> pd.DataFrame:
     df = df.dropna(subset=["ws10_mean", "lat", "lon"]).reset_index(drop=True)
     return df
 
+def export_station_for_matlab(station_id: str | None = None):
+    """Export one station's hourly data to CSV for MATLAB Weibull script."""
+    from src.config import DATA_RAW, DATA_INTERIM
+    DATA_INTERIM.mkdir(parents=True, exist_ok=True)
+
+    hourly = pd.read_parquet(DATA_RAW / "station_wind_hourly.parquet")
+    if station_id is None:
+        # Pick station with most data
+        station_id = hourly["station_id"].value_counts().idxmax()
+
+    sub = hourly[hourly["station_id"] == station_id].copy()
+    out = DATA_INTERIM / "station_for_weibull.csv"
+    sub.to_csv(out, index=False)
+    print(f"Exported {station_id} ({len(sub)} hours) to {out}")
+    return out
+
+
+if __name__ == "__main__":
+    # ... existing code ...
+    export_station_for_matlab()
+
 
 if __name__ == "__main__":
     DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
